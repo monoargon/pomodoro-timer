@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Pomodoro Timer</title>
+    <style>
+        :root {
+            --primary-color: #1e90ff;
+            --secondary-color: #00bfff;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #timer {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .controls button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .settings-panel {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .settings-panel h3 {
+            margin-top: 0;
+        }
+
+        .time-input {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .time-input input {
+            width: 60px;
+            padding: 0.5rem;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .theme-selector {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .theme-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            transition: transform 0.2s;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-option.selected {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .mode-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mode-buttons button {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        .mode-buttons button.active {
+            background: white;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="settings-panel">
+            <h3>Timer Settings</h3>
+
+            <div class="time-input">
+                <div>
+                    <label for="pomodoro-time">Pomodoro (min):</label>
+                    <input type="number" id="pomodoro-time" value="25" min="1">
+                </div>
+                <div>
+                    <label for="short-break-time">Short Break (min):</label>
+                    <input type="number" id="short-break-time" value="5" min="1">
+                </div>
+                <div>
+                    <label for="long-break-time">Long Break (min):</label>
+                    <input type="number" id="long-break-time" value="15" min="1">
+                </div>
+            </div>
+
+            <div>
+                <h3>Select Theme</h3>
+                <div class="theme-selector">
+                    <div class="theme-option selected" data-theme="blue" style="background: linear-gradient(135deg, #1e90ff, #00bfff);"></div>
+                    <div class="theme-option" data-theme="green" style="background: linear-gradient(135deg, #2ecc71, #27ae60);"></div>
+                    <div class="theme-option" data-theme="red" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+                    <div class="theme-option" data-theme="purple" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mode-buttons">
+            <button id="pomodoro-btn" class="active">Pomodoro</button>
+            <button id="short-break-btn">Short Break</button>
+            <button id="long-break-btn">Long Break</button>
+        </div>
+
+        <div id="timer">25:00</div>
+
+        <div class="controls">
+            <button id="start-stop-btn">Start</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const timerDisplay = document.getElementById('timer');
+        const startStopBtn = document.getElementById('start-stop-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const pomodoroBtn = document.getElementById('pomodoro-btn');
+        const shortBreakBtn = document.getElementById('short-break-btn');
+        const longBreakBtn = document.getElementById('long-break-btn');
+        const pomodoroTimeInput = document.getElementById('pomodoro-time');
+        const shortBreakTimeInput = document.getElementById('short-break-time');
+        const longBreakTimeInput = document.getElementById('long-break-time');
+        const themeOptions = document.querySelectorAll('.theme-option');
+
+        // Timer variables
+        let currentTime = 25 * 60;
+        let timerInterval;
+        let isRunning = false;
+        let currentMode = 'pomodoro';
+
+        // Theme colors for all modes
+        const themes = {
+            blue: {
+                pomodoro: { primary: '#1e90ff', secondary: '#00bfff' },
+                shortBreak: { primary: '#4682b4', secondary: '#87ceeb' },
+                longBreak: { primary: '#191970', secondary: '#4169e1' }
+            },
+            green: {
+                pomodoro: { primary: '#2ecc71', secondary: '#27ae60' },
+                shortBreak: { primary: '#89e59a', secondary: '#6ec299' },
+                longBreak: { primary: '#16a085', secondary: '#0bcea7' }
+            },
+            red: {
+                pomodoro: { primary: '#e74c3c', secondary: '#c0392b' },
+                shortBreak: { primary: '#e67e22', secondary: '#d35400' },
+                longBreak: { primary: '#f68888', secondary: '#980000' }
+            },
+            purple: {
+                pomodoro: { primary: '#9b59b6', secondary: '#8e44ad' },
+                shortBreak: { primary: '#5b54b0', secondary: '#40388e' },
+                longBreak: { primary: '#4c0881', secondary: '#bf7dff' }
+            }
+        };
+        let currentTheme = 'blue';
+
+        // Format time (MM:SS)
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        // Update timer
+        function updateTimer() {
+            currentTime--;
+            timerDisplay.textContent = formatTime(currentTime);
+
+            if (currentTime <= 0) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                startStopBtn.textContent = 'Start';
+                playAlertSound();
+                alert(currentMode === 'pomodoro' ? 'Time for a break!' : 'Time to work!');
+            }
+        }
+
+        // Play alert sound
+        function playAlertSound() {
+            try {
+                // مسیر فایل صوتی را مطابق با محل ذخیره فایل تنظیم کنید
+                const audio = new Audio('alert.mp3');
+                audio.play().catch(e => console.log("Error playing sound:", e));
+            } catch(e) {
+                console.log("Audio error:", e);
+                // Fallback به صدای سیستم اگر فایل صوتی پیدا نشد
+                playSystemBeep();
+            }
+        }
+
+        // Play system beep (fallback)
+        function playSystemBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = "sine";
+                oscillator.frequency.value = 800;
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } catch(e) {
+                console.log("System beep error:", e);
+            }
+        }
+
+        // Start/stop timer
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                startStopBtn.textContent = 'Start';
+            } else {
+                timerInterval = setInterval(updateTimer, 1000);
+                isRunning = true;
+                startStopBtn.textContent = 'Stop';
+            }
+        }
+
+        // Reset timer
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            startStopBtn.textContent = 'Start';
+
+            switch (currentMode) {
+                case 'pomodoro':
+                    currentTime = parseInt(pomodoroTimeInput.value) * 60;
+                    break;
+                case 'shortBreak':
+                    currentTime = parseInt(shortBreakTimeInput.value) * 60;
+                    break;
+                case 'longBreak':
+                    currentTime = parseInt(longBreakTimeInput.value) * 60;
+                    break;
+            }
+
+            timerDisplay.textContent = formatTime(currentTime);
+        }
+
+        // Change timer mode
+        function setMode(mode) {
+            currentMode = mode;
+            resetTimer();
+
+            // Update button styles
+            pomodoroBtn.classList.remove('active');
+            shortBreakBtn.classList.remove('active');
+            longBreakBtn.classList.remove('active');
+
+            if (mode === 'pomodoro') {
+                pomodoroBtn.classList.add('active');
+            } else if (mode === 'shortBreak') {
+                shortBreakBtn.classList.add('active');
+            } else {
+                longBreakBtn.classList.add('active');
+            }
+
+            updateTheme(currentTheme, mode);
+        }
+
+        // Update theme colors
+        function updateTheme(theme, mode) {
+            const root = document.documentElement;
+            const themeColors = themes[theme][mode];
+
+            root.style.setProperty('--primary-color', themeColors.primary);
+            root.style.setProperty('--secondary-color', themeColors.secondary);
+        }
+
+        // Theme selection
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                themeOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                currentTheme = option.dataset.theme;
+                updateTheme(currentTheme, currentMode);
+            });
+        });
+
+        // Time input changes
+        [pomodoroTimeInput, shortBreakTimeInput, longBreakTimeInput].forEach(input => {
+            input.addEventListener('change', () => {
+                if (input.value < 1) input.value = 1;
+                resetTimer();
+            });
+        });
+
+        // Click events
+        startStopBtn.addEventListener('click', toggleTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        pomodoroBtn.addEventListener('click', () => setMode('pomodoro'));
+        shortBreakBtn.addEventListener('click', () => setMode('shortBreak'));
+        longBreakBtn.addEventListener('click', () => setMode('longBreak'));
+
+        // Initialize
+        setMode('pomodoro');
+    </script>
+</body>
+</html>
